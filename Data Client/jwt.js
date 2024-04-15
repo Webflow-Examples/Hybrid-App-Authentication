@@ -20,7 +20,7 @@ const authenticateToken = (req, res, next) => {
         }
 
         // Use the user details to fetch the access token from the database
-        db.getAccessToken(user.user, (error, accessToken) => {
+        db.getAccessToken(user.user.id, (error, accessToken) => {
 
             if (error) {
                 return res.status(500).json({ error: 'Failed to retrieve access token' });
