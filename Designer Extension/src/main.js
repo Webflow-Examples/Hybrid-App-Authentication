@@ -3,7 +3,7 @@ import ReactDOM from "react-dom/client";
 import axios from "axios";
 import DataTable from "./DataTable";
 import { ThemeProvider, Button, Container, Typography } from "@mui/material";
-import theme from './theme'
+import theme from "./theme";
 
 const App = () => {
   const [idToken, setIdToken] = useState("");
@@ -23,50 +23,62 @@ const App = () => {
       try {
         // Get ID Token from Webflow
         const idToken = await webflow.getIdToken();
+        const siteInfo = await webflow.getSiteInfo();
         setIdToken(idToken);
-
-        console.log(`idToken: ${idToken}`);
 
         // Send token to Webflow, and wait for a response with a JWT from our Data Client
         const getSessionToken = async (idToken) => {
-
           // Send ID Token to the Data Client
-            const response = await axios.post(API_URL + "token", {
-              idToken: idToken,
-            });
+          const response = await axios.post(API_URL + "token", {
+            idToken: idToken,
+            siteId: siteInfo.siteId,
+          });
 
-            try {
-              // Store sessionToken in Local Storage
-              const sessionToken = response.data.sessionToken;
+          try {
+            // Store sessionToken in Local Storage
+            const sessionToken = response.data.sessionToken;
 
-              // Decode the sessionToken
-              const decodedToken = JSON.parse(atob(sessionToken.split(".")[1]));
-              const firstName = decodedToken.user.firstName;
-              const email = decodedToken.user.email;
+            // Decode the sessionToken
+            const decodedToken = JSON.parse(atob(sessionToken.split(".")[1]));
+            const firstName = decodedToken.user.firstName;
+            const email = decodedToken.user.email;
 
-              localStorage.setItem(
-                "user",
-                JSON.stringify({
-                  sessionToken: sessionToken,
-                  firstName: firstName,
-                  email: email,
-                })
-              );
-              setUser({ firstName, email });
-              setSessionToken(sessionToken);
-              console.log(`Session Token: ${sessionToken}`);
-            } catch (error) {
-              console.error("No Token", error);
-            }
+            localStorage.setItem(
+              "wf_hybrid_user",
+              JSON.stringify({
+                sessionToken: sessionToken,
+                firstName: firstName,
+                email: email,
+              })
+            );
+            setUser({ firstName, email });
+            setSessionToken(sessionToken);
+            console.log(`Session Token: ${sessionToken}`);
+          } catch (error) {
+            console.error("No Token", error);
+          }
         };
         await getSessionToken(idToken);
       } catch (error) {
         console.error("Error fetching ID Token:", error);
       }
     };
-
-  // Run function
-  exchangeAndVerifyIdToken();
+    // Check if we have a session token in local storage and use it, otherwise, restart the idToken flow
+    const localStorageUser = localStorage.getItem("wf_hybrid_user");
+    if (localStorageUser) {
+      const userParse = JSON.parse(localStorageUser);
+      const userStoredSessionToken = userParse.sessionToken;
+      if (userStoredSessionToken) {
+        if (!sessionToken) {
+          setSessionToken(userStoredSessionToken);
+          setUser({ firstName: userParse.firstName, email: userParse.email });
+        }
+      } else {
+        exchangeAndVerifyIdToken();
+      }
+    } else {
+      exchangeAndVerifyIdToken();
+    }
   }, []);
 
   // Handle request for site data
@@ -80,10 +92,16 @@ const App = () => {
   return (
     <ThemeProvider theme={theme}>
       <div>
-      <Container sx={{padding:'20px'}}>
-        <Typography variant="h1">👋🏾 Hello {user.firstName}</Typography>
-        <Button variant="contained" sx={{ margin: '10px 20px' }} onClick={getSiteData}>Get Sites</Button>
-        {siteData.length > 0 && <DataTable data={siteData} />}
+        <Container sx={{ padding: "20px" }}>
+          <Typography variant="h1">👋🏾 Hello {user.firstName}</Typography>
+          <Button
+            variant="contained"
+            sx={{ margin: "10px 20px" }}
+            onClick={getSiteData}
+          >
+            Get Sites
+          </Button>
+          {siteData.length > 0 && <DataTable data={siteData} />}
         </Container>
       </div>
     </ThemeProvider>

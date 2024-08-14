@@ -1,12 +1,13 @@
 const express = require("express");
 const cors = require("cors");
+const path = require("path");
 const { WebflowClient } = require("webflow-api");
 const axios = require("axios");
-require("dotenv").config();
+require("dotenv").config({ path: path.resolve(__dirname, "../.env") });
 
 const app = express(); // Create an Express application
 const db = require("./database.js"); // Load DB Logic
-const jwt = require("./jwt.js")
+const jwt = require("./jwt.js");
 
 var corsOptions = { origin: ["http://localhost:1337"] };
 
@@ -17,18 +18,17 @@ app.use(express.urlencoded({ extended: true })); // Parse URL-encoded incoming r
 
 // Redirect user to Webflow Authorization screen
 app.get("/authorize", (req, res) => {
-
-    const authorizeUrl = WebflowClient.authorizeURL({
-        scope: ["sites:read","authorized_user:read"],
-        clientId: process.env.WEBFLOW_CLIENT_ID,
-    })
-    res.redirect(authorizeUrl)
-})
+  const authorizeUrl = WebflowClient.authorizeURL({
+    scope: ["sites:read", "authorized_user:read"],
+    clientId: process.env.WEBFLOW_CLIENT_ID,
+  });
+  res.redirect(authorizeUrl);
+});
 
 // Optional: Redirect root to Webflow Authorization screen
-app.get("/", (req,res) =>{
-    res.redirect("/authorize")
-})
+app.get("/", (req, res) => {
+  res.redirect("/authorize");
+});
 
 // Exchange the authorization code for an access token and save to DB
 app.get("/callback", async (req, res) => {
@@ -44,51 +44,60 @@ app.get("/callback", async (req, res) => {
   // Instantiate the Webflow Client
   const webflow = new WebflowClient({ accessToken });
 
-  // Get Authorization Details
-  const user = await webflow.token.authorizedBy();
-  user.accessToken = accessToken; // add access token to user object
+  // Get site ID to pair with the authorization access token
+  const sites = await webflow.sites.list();
+  const siteToStore = sites.sites[0].id;
 
   // Save User Details to DB
-  db.insertAuthorization(user);
+  db.insertSiteAuthorization(siteToStore, accessToken);
+  res.send("<p>Now open the Designer Extension!</p>");
 });
 
 // Authenticate Designer Extension User via ID Token
-app.post("/token", async (req, res) => {
+app.post("/token", jwt.retrieveAccessToken, async (req, res) => {
   const token = req.body.idToken; // Get token from request
 
   // Resolve Session token by makeing a Request to Webflow API
-  const APP_TOKEN = process.env.APP_TOKEN;
-  const options = {
-    method: "POST",
-    url: "https://api.webflow.com/beta/token/resolve",
-    headers: {
-      accept: "application/json",
-      "content-type": "application/json",
-      authorization: `Bearer ${process.env.APP_TOKEN}`,
-    },
-    data: {
-      idToken: token,
-    },
-  };
-  const request = await axios.request(options);
-  const user = request.data;
+  let sessionToken;
+  try {
+    const options = {
+      method: "POST",
+      url: "https://api.webflow.com/beta/token/resolve",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${req.accessToken}`,
+      },
+      data: {
+        idToken: token,
+      },
+    };
+    const request = await axios.request(options);
+    const user = request.data;
 
-  // Generate a Session Token
-  const sessionToken = jwt.createSessionToken(user)
-
-  // Respond to user with sesion token
-  res.json({ sessionToken });
+    // Generate a Session Token
+    sessionToken = jwt.createSessionToken(user);
+    db.insertUserAuthorization(user.id, req.accessToken);
+    // Respond to user with sesion token
+    res.json({ sessionToken });
+  } catch (e) {
+    console.error(
+      "Unauthorized; user is not associated with authorization for this site",
+      e
+    );
+    res.status(401).json({
+      error: "Error: User is not associated with authorization for this site",
+    });
+  }
 });
 
 // Make authenticated request with user's session token
-app.get("/sites", jwt.authenticateToken ,async (req, res) => {
-  
+app.get("/sites", jwt.authenticateSessionToken, async (req, res) => {
   try {
     // Initialize Webflow Client and make request to sites endpoint
-    const accessToken = req.accessToken
+    const accessToken = req.accessToken;
     const webflow = new WebflowClient({ accessToken });
     const data = await webflow.sites.list();
-    console.log(accessToken)
     // Send the retrieved data back to the client
     res.json({ data });
   } catch (error) {
