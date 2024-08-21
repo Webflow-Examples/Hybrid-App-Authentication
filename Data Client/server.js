@@ -102,8 +102,6 @@ app.post("/token", jwt.retrieveAccessToken, async (req, res) => {
   }
 });
 
-console.log("hello");
-
 // Make authenticated request with user's session token
 app.get("/sites", jwt.authenticateSessionToken, async (req, res) => {
   try {
@@ -123,25 +121,30 @@ app.get("/sites", jwt.authenticateSessionToken, async (req, res) => {
 const startServer = async () => {
   try {
     const PORT = process.env.PORT;
-    // Start Ngrok or get the existing URL
+    // Start Ngrok
     const ngrokUrl = await startNgrok(PORT);
 
+    // Create a table to output in the CLI
     const table = new Table({
-      head: ["Location", "URL"],
-      colWidths: [30, 60],
+      head: ["Location", "URL"], // Define column headers
+      colWidths: [30, 60], // Define column widths
     });
 
+    // Add URL information to the table
     table.push(
-      ["Development URL (Frontend)", "http://localhost:1337"],
+      ["Develoment URL (Frontend)", "http://localhost:1337"],
       ["Development URL (Backend)", `http://localhost:${PORT}`]
     );
 
+    // If using an App, also add the Redirect URI to the table
     if (!process.env.SITE_TOKEN) {
       table.push(["Redirect URI", `${ngrokUrl}/callback`]);
     }
 
+    // Console log the table
     console.log(table.toString());
 
+    // If using an App, send a note to adjust the app's Redirect URI
     if (!process.env.SITE_TOKEN) {
       console.log(
         chalk.blue.inverse("\n\nNOTE:"),
@@ -149,6 +152,7 @@ const startServer = async () => {
       );
     }
 
+    // Start the server
     app.listen(PORT, () => {
       // console.log(`Server is running on http://localhost:${PORT}`);
     });

@@ -26,16 +26,5 @@
   },
   "devDependencies": {
     "nodemon": "^3.1.0"
-  },
-  "nodemonConfig": {
-    "restartable": "rs",
-    "ignore": [
-      "ngrok-url.txt"
-    ],
-    "signal": "SIGUSR2",
-    "ext": "js,json",
-    "watch": [
-      "./"
-    ]
   }
 }
