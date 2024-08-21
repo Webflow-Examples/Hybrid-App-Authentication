@@ -57,10 +57,10 @@ app.get("/callback", async (req, res) => {
 
   // Get site ID to pair with the authorization access token
   const sites = await webflow.sites.list();
-  const siteToStore = sites.sites[0].id;
+  sites.sites.forEach((site) => {
+    db.insertSiteAuthorization(site.id, accessToken);
+  });
 
-  // Save User Details to DB
-  db.insertSiteAuthorization(siteToStore, accessToken);
   res.send("<p>Now open the Designer Extension!</p>");
 });
 
