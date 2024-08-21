@@ -1,9 +1,15 @@
-const sqlite3 = require("sqlite3").verbose();
-const jwt = require("jsonwebtoken");
-require("dotenv").config();
+import sqlite3 from "sqlite3";
+import jwt from "jsonwebtoken";
+import dotenv from "dotenv";
+
+// Enable dotenv to load environment variables
+dotenv.config();
+
+// Enable verbose mode for SQLite3
+const sqlite3Verbose = sqlite3.verbose();
 
 // Open SQLite database connection
-const db = new sqlite3.Database("./db/database.db");
+const db = new sqlite3Verbose.Database("./db/database.db");
 
 // Create authorizations table
 db.serialize(() => {
@@ -206,7 +212,7 @@ function getAccessToken(userId, callback) {
   );
 }
 
-module.exports = {
+export default {
   db,
   insertAuthorization,
   insertSiteAuthorization,

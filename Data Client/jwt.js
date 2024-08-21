@@ -1,5 +1,5 @@
-const jwt = require("jsonwebtoken");
-const db = require("./database.js");
+import jwt from "jsonwebtoken";
+import db from "./database.js";
 
 const createSessionToken = (user) => {
   const sessionToken = jwt.sign({ user }, process.env.WEBFLOW_CLIENT_SECRET, {
@@ -60,7 +60,7 @@ const authenticateSessionToken = (req, res, next) => {
   });
 };
 
-module.exports = {
+export default {
   createSessionToken,
   retrieveAccessToken,
   authenticateSessionToken,
