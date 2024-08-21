@@ -1,0 +1,16 @@
+<html>
+
+<body>
+    <p>Authentication successful! You can now close this window.</p>
+    <script>
+        // Check if the window was opened by another window (e.g., the main app)
+        if (window.opener) {
+            // Notify the parent window that authentication is complete
+            window.opener.postMessage('authComplete', 'http://localhost:1337');
+            // Optionally, close this window after sending the message
+            window.close();
+        }
+    </script>
+</body>
+
+</html>

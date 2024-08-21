@@ -212,6 +212,40 @@ function getAccessToken(userId, callback) {
   );
 }
 
+function clearDatabase() {
+  db.serialize(() => {
+    // Clear data from authorizations table
+    db.run("DELETE FROM authorizations", (err) => {
+      if (err) {
+        console.error("Error clearing authorizations table:", err);
+      } else {
+        console.log("Authorizations table cleared.");
+      }
+    });
+
+    // Clear data from siteAuthorizations table
+    db.run("DELETE FROM siteAuthorizations", (err) => {
+      if (err) {
+        console.error("Error clearing siteAuthorizations table:", err);
+      } else {
+        console.log("Site Authorizations table cleared.");
+      }
+    });
+
+    // Clear data from userAuthorizations table
+    db.run("DELETE FROM userAuthorizations", (err) => {
+      if (err) {
+        console.error("Error clearing userAuthorizations table:", err);
+      } else {
+        console.log("User Authorizations table cleared.");
+      }
+    });
+  });
+}
+
+// Example usage
+clearDatabase();
+
 export default {
   db,
   insertAuthorization,
@@ -220,4 +254,5 @@ export default {
   getAccessToken,
   getAccessTokenFromSiteId,
   getAccessTokenFromUserId,
+  clearDatabase,
 };

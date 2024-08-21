@@ -1,4 +1,5 @@
 import ngrok from "@ngrok/ngrok";
+import db from "./../database.js";
 
 let publicUrl; // Variable to store the current active ngrok URL
 let shuttingDown = false; // Flag to ensure single execution of signal handlers
@@ -46,6 +47,7 @@ const handleShutdown = async (signal) => {
   if (shuttingDown) return; // Prevent multiple executions
   shuttingDown = true;
   console.log(`Received ${signal}, shutting down gracefully...`);
+  db.clearDatabase();
   await disconnectNgrok();
   process.exit(0);
 };

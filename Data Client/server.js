@@ -61,7 +61,9 @@ app.get("/callback", async (req, res) => {
     db.insertSiteAuthorization(site.id, accessToken);
   });
 
-  res.send("<p>Now open the Designer Extension!</p>");
+  // Send Auth Complete Screen with Post Message
+  const filePath = path.join(__dirname, "public", "authComplete.html");
+  res.sendFile(filePath);
 });
 
 // Authenticate Designer Extension User via ID Token
