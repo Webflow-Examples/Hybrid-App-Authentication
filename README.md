@@ -22,4 +22,4 @@ Ensure the following environment variables are configured:
 ## Additional Resources
 For more detailed instructions on setting up JWT middleware, configuring the server, and integrating with the Designer Extension frontend, please refer to the following guide:
 
-[Authentication Guide](https://teal-biscotti-e6017a.netlify.app/)
+[Authentication Guide](https://developers.webflow.com/data/docs/authenticating-users-with-id-tokens)
