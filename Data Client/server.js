@@ -61,6 +61,17 @@ app.get("/callback", async (req, res) => {
     db.insertSiteAuthorization(site.id, accessToken);
   });
 
+  // Redirect URI with first site, can improve UX later for choosing a site
+  // to redirect to
+  const firstSite = sites.sites?.[0];
+  if (firstSite) {
+    const shortName = firstSite.shortName;
+    res.redirect(
+      `https://${shortName}.design.webflow.com?app=${process.env.WEBFLOW_CLIENT_ID}`
+    );
+    return;
+  }
+
   // Send Auth Complete Screen with Post Message
   const filePath = path.join(__dirname, "public", "authComplete.html");
   res.sendFile(filePath);
@@ -89,10 +100,12 @@ app.post("/token", jwt.retrieveAccessToken, async (req, res) => {
     const user = request.data;
 
     // Generate a Session Token
-    sessionToken = jwt.createSessionToken(user);
+    const tokenPayload = jwt.createSessionToken(user);
+    sessionToken = tokenPayload.sessionToken;
+    const expAt = tokenPayload.exp;
     db.insertUserAuthorization(user.id, req.accessToken);
     // Respond to user with sesion token
-    res.json({ sessionToken });
+    res.json({ sessionToken, exp: expAt });
   } catch (e) {
     console.error(
       "Unauthorized; user is not associated with authorization for this site",

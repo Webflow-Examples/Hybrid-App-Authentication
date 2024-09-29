@@ -5,7 +5,11 @@ const createSessionToken = (user) => {
   const sessionToken = jwt.sign({ user }, process.env.WEBFLOW_CLIENT_SECRET, {
     expiresIn: "24h",
   }); // Example expiration time of 1 hour}
-  return sessionToken;
+  const decodedToken = jwt.decode(sessionToken);
+  return {
+    sessionToken,
+    exp: decodedToken.exp,
+  };
 };
 
 // Given a site ID, retrieve associated Access Token

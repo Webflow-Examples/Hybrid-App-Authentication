@@ -34,6 +34,7 @@ const App = () => {
         try {
           // Parse information from resolved token
           const sessionToken = response.data.sessionToken;
+          const expAt = response.data.exp;
           const decodedToken = JSON.parse(atob(sessionToken.split(".")[1]));
           const firstName = decodedToken.user.firstName;
           const email = decodedToken.user.email;
@@ -41,7 +42,7 @@ const App = () => {
           // Store information in Local Storage
           localStorage.setItem(
             "wf_hybrid_user",
-            JSON.stringify({ sessionToken, firstName, email })
+            JSON.stringify({ sessionToken, firstName, email, exp: expAt })
           );
           setUser({ firstName, email });
           setSessionToken(sessionToken);
@@ -59,12 +60,14 @@ const App = () => {
     if (localStorageUser) {
       const userParse = JSON.parse(localStorageUser);
       const userStoredSessionToken = userParse.sessionToken;
-      if (userStoredSessionToken) {
+      const userStoredTokenExp = userParse.exp;
+      if (userStoredSessionToken && Date.now() < userStoredTokenExp) {
         if (!sessionToken) {
           setSessionToken(userStoredSessionToken);
           setUser({ firstName: userParse.firstName, email: userParse.email });
         }
       } else {
+        localStorage.removeItem("wf_hybrid_user");
         exchangeAndVerifyIdToken();
       }
     } else {
