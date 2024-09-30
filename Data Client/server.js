@@ -1,13 +1,24 @@
-const express = require("express");
-const cors = require("cors");
-const path = require("path");
-const { WebflowClient } = require("webflow-api");
-const axios = require("axios");
-require("dotenv").config({ path: path.resolve(__dirname, "../.env") });
+import express from "express";
+import cors from "cors";
+import path from "path";
+import { fileURLToPath } from "url";
+import { WebflowClient } from "webflow-api";
+import axios from "axios";
+import dotenv from "dotenv";
+import Table from "cli-table3";
+import chalk from "chalk";
+import { startNgrok } from "./utils/ngrokManager.js";
+import db from "./database.js"; // Load DB Logic
+import jwt from "./jwt.js";
+
+// Get the current file path and directory
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Load environment variables from .env file
+dotenv.config({ path: path.resolve(__dirname, "../.env") });
 
 const app = express(); // Create an Express application
-const db = require("./database.js"); // Load DB Logic
-const jwt = require("./jwt.js");
 
 var corsOptions = { origin: ["http://localhost:1337"] };
 
@@ -46,11 +57,24 @@ app.get("/callback", async (req, res) => {
 
   // Get site ID to pair with the authorization access token
   const sites = await webflow.sites.list();
-  const siteToStore = sites.sites[0].id;
+  sites.sites.forEach((site) => {
+    db.insertSiteAuthorization(site.id, accessToken);
+  });
 
-  // Save User Details to DB
-  db.insertSiteAuthorization(siteToStore, accessToken);
-  res.send("<p>Now open the Designer Extension!</p>");
+  // Redirect URI with first site, can improve UX later for choosing a site
+  // to redirect to
+  const firstSite = sites.sites?.[0];
+  if (firstSite) {
+    const shortName = firstSite.shortName;
+    res.redirect(
+      `https://${shortName}.design.webflow.com?app=${process.env.WEBFLOW_CLIENT_ID}`
+    );
+    return;
+  }
+
+  // Send Auth Complete Screen with Post Message
+  const filePath = path.join(__dirname, "public", "authComplete.html");
+  res.sendFile(filePath);
 });
 
 // Authenticate Designer Extension User via ID Token
@@ -76,10 +100,12 @@ app.post("/token", jwt.retrieveAccessToken, async (req, res) => {
     const user = request.data;
 
     // Generate a Session Token
-    sessionToken = jwt.createSessionToken(user);
+    const tokenPayload = jwt.createSessionToken(user);
+    sessionToken = tokenPayload.sessionToken;
+    const expAt = tokenPayload.exp;
     db.insertUserAuthorization(user.id, req.accessToken);
     // Respond to user with sesion token
-    res.json({ sessionToken });
+    res.json({ sessionToken, exp: expAt });
   } catch (e) {
     console.error(
       "Unauthorized; user is not associated with authorization for this site",
@@ -106,8 +132,49 @@ app.get("/sites", jwt.authenticateSessionToken, async (req, res) => {
   }
 });
 
-// Start the server
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
-});
+// Start server with NGROK
+const startServer = async () => {
+  try {
+    const PORT = process.env.PORT;
+    // Start Ngrok
+    const ngrokUrl = await startNgrok(PORT);
+
+    // Create a table to output in the CLI
+    const table = new Table({
+      head: ["Location", "URL"], // Define column headers
+      colWidths: [30, 60], // Define column widths
+    });
+
+    // Add URL information to the table
+    table.push(
+      ["Develoment URL (Frontend)", "http://localhost:1337"],
+      ["Development URL (Backend)", `http://localhost:${PORT}`]
+    );
+
+    // If using an App, also add the Redirect URI to the table
+    if (!process.env.SITE_TOKEN) {
+      table.push(["Redirect URI", `${ngrokUrl}/callback`]);
+    }
+
+    // Console log the table
+    console.log(table.toString());
+
+    // If using an App, send a note to adjust the app's Redirect URI
+    if (!process.env.SITE_TOKEN) {
+      console.log(
+        chalk.blue.inverse("\n\nNOTE:"),
+        chalk.blue("Update your Redirect URI in your App Settings\n\n")
+      );
+    }
+
+    // Start the server
+    app.listen(PORT, () => {
+      // console.log(`Server is running on http://localhost:${PORT}`);
+    });
+  } catch (error) {
+    console.error("Failed to start the server with ngrok:", error);
+    process.exit(1);
+  }
+};
+
+startServer();

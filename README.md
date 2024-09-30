@@ -19,7 +19,7 @@ Before setting up this project in your local dev environment, follow these steps
    - Set the following "scopes"/building block permissions:
      - **Authorized user:** Read-only
      - **Sites:** Read and Write
-   - Use the `https`-based ngrok URLs (i.e. `https://my-url.ngrok.io/`) to set the App homepage URL and the Redirect URI with the values below (as an example):
+   - Use dummy URLs (i.e. `https://my-url.ngrok.io/`) to set the App homepage URL and the Redirect URI with the values below (we'll replace with Ngrok-provided URLs shortly):
      - **App homepage url:** https://my-url.ngrok.io/
      - **Redirect URI:** https://my-url.ngrok.io/callback
 
@@ -30,7 +30,10 @@ To run the application, follow these steps:
 1. Clone this repository to your local machine.
 2. Install dependencies by running `npm install`.
 3. Create a copy of the `.env.example` file and name it `.env`. Fill the values for each of the variables outlined in the section below.
-4. Start the application by running `npm run dev`.
+4. Start the application by running `npm run dev`. Note that a table should be printed on your terminal with the Development URLs and Redirect URI.
+5. Back in the Webflow Workspace for App settings, set the `Redirect URI` to be the one listed in the terminal (i.e. `https://8a75-73-168-29-191.ngrok-free.app/callback`) and save the settings.
+6. Navigate to the root of that Ngrok URL (i.e., `https://8a75-73-168-29-191.ngrok-free.app/`) and authorize the App for the site
+7. You should be taken to the Designer on redirect. Open the Apps panel and select the App you've created and click "Launch development App" to get started and retrieve Site data
 
 ### Environment Variables
 

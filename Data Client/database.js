@@ -1,9 +1,15 @@
-const sqlite3 = require("sqlite3").verbose();
-const jwt = require("jsonwebtoken");
-require("dotenv").config();
+import sqlite3 from "sqlite3";
+import jwt from "jsonwebtoken";
+import dotenv from "dotenv";
+
+// Enable dotenv to load environment variables
+dotenv.config();
+
+// Enable verbose mode for SQLite3
+const sqlite3Verbose = sqlite3.verbose();
 
 // Open SQLite database connection
-const db = new sqlite3.Database("./db/database.db");
+const db = new sqlite3Verbose.Database("./db/database.db");
 
 // Create authorizations table
 db.serialize(() => {
@@ -206,7 +212,41 @@ function getAccessToken(userId, callback) {
   );
 }
 
-module.exports = {
+function clearDatabase() {
+  db.serialize(() => {
+    // Clear data from authorizations table
+    db.run("DELETE FROM authorizations", (err) => {
+      if (err) {
+        console.error("Error clearing authorizations table:", err);
+      } else {
+        console.log("Authorizations table cleared.");
+      }
+    });
+
+    // Clear data from siteAuthorizations table
+    db.run("DELETE FROM siteAuthorizations", (err) => {
+      if (err) {
+        console.error("Error clearing siteAuthorizations table:", err);
+      } else {
+        console.log("Site Authorizations table cleared.");
+      }
+    });
+
+    // Clear data from userAuthorizations table
+    db.run("DELETE FROM userAuthorizations", (err) => {
+      if (err) {
+        console.error("Error clearing userAuthorizations table:", err);
+      } else {
+        console.log("User Authorizations table cleared.");
+      }
+    });
+  });
+}
+
+// Example usage
+clearDatabase();
+
+export default {
   db,
   insertAuthorization,
   insertSiteAuthorization,
@@ -214,4 +254,5 @@ module.exports = {
   getAccessToken,
   getAccessTokenFromSiteId,
   getAccessTokenFromUserId,
+  clearDatabase,
 };
