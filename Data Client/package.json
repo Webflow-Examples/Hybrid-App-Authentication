@@ -1,20 +1,23 @@
 {
   "name": "hybrid-app-jwt-3",
   "version": "1.0.0",
+  "type": "module",
   "description": "",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon server.js"
+    "dev": "nodemon --signal SIGUSR2 server.js"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@ngrok/ngrok": "^1.4.1",
     "axios": "^1.6.8",
+    "chalk": "^5.3.0",
+    "cli-table3": "^0.6.5",
     "concurrently": "^8.2.2",
     "cors": "^2.8.5",
     "crypto": "^1.0.1",
-    "dot-env": "^0.0.1",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
     "jsonwebtoken": "^9.0.2",

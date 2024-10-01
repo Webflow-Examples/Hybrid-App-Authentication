@@ -4,6 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "install": "npm run install-frontend && npm run install-backend",
+    "install-frontend": "cd Designer\\ Extension && npm i",
+    "install-backend": "cd Data\\ Client && npm i",
     "dev": "concurrently \"cd Data\\ Client && npm run dev\" \"cd Designer\\ Extension && npm run dev\"",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
