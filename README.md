@@ -1,4 +1,4 @@
-# Hybrid APP Authentication with ID Tokens
+# Hybrid App Authentication with ID Tokens
 
 ## Introduction
 
