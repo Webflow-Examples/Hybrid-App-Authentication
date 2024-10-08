@@ -11,7 +11,7 @@ const App = () => {
   const [user, setUser] = useState({});
   const [siteData, setSiteData] = useState([]);
 
-  const PORT = 3000;
+  const PORT = process.env.PORT;
   const API_URL = `http://localhost:${PORT}/`;
 
   useEffect(() => {
@@ -101,7 +101,7 @@ const App = () => {
 
   // Open OAuth screen
   const openAuthScreen = () => {
-    window.open("http://localhost:3000", "_blank", "width=600,height=400");
+    window.open(`http://localhost:${PORT}`, "_blank", "width=600,height=400");
   };
 
   return (

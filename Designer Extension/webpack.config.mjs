@@ -1,5 +1,6 @@
 import path from "path";
 import { fileURLToPath } from "url";
+import Dotenv from "dotenv-webpack";
 
 const filename = fileURLToPath(import.meta.url);
 const dirname = path.dirname(filename);
@@ -25,9 +26,12 @@ export default {
       },
     ],
   },
+  plugins: [
+    new Dotenv({ path: path.resolve(dirname, "../.env") }), // Add custom .env path here
+  ],
   devServer: {
     static: [{ directory: path.join(dirname, "public") }],
     compress: true,
-    port: 3000,
+    port: process.env.PORT,
   },
 };

@@ -13,16 +13,6 @@ const db = new sqlite3Verbose.Database("./db/database.db");
 
 // Create authorizations table
 db.serialize(() => {
-  db.run(`
-    CREATE TABLE IF NOT EXISTS authorizations (
-      id TEXT PRIMARY KEY,
-      email TEXT,
-      firstName TEXT,
-      lastName TEXT,
-      accessToken TEXT
-    )
-  `);
-
   // Table to associate site ID with access token from OAuth
   db.run(`
     CREATE TABLE IF NOT EXISTS siteAuthorizations (
@@ -40,39 +30,6 @@ db.serialize(() => {
     )
   `);
 });
-
-// Function to insert user into the database or return existing user
-function insertAuthorization(user) {
-  // Check if the user already exists
-  db.get(
-    "SELECT * FROM authorizations WHERE id = ?",
-    [user.id],
-    (err, existingUser) => {
-      if (err) {
-        console.error("Error checking for existing user:", err);
-        return;
-      }
-
-      // If the user already exists, return the existing user
-      if (existingUser) {
-        console.log("User already exists:", existingUser);
-      }
-
-      // If the user doesn't exist, insert the new user
-      db.run(
-        "INSERT INTO authorizations (id, email, firstName, lastName, accessToken) VALUES (?, ?, ?, ?, ?)",
-        [user.id, user.email, user.firstName, user.lastName, user.accessToken],
-        (err) => {
-          if (err) {
-            console.error("Error inserting user:", err);
-          } else {
-            console.log("User inserted successfully.");
-          }
-        }
-      );
-    }
-  );
-}
 
 // Insert a record after exchanging the OAuth code for an access token
 function insertSiteAuthorization(siteId, accessToken) {
@@ -187,31 +144,6 @@ function getAccessTokenFromUserId(userId, callback) {
   );
 }
 
-// Function to retrieve and decrypt the access token for a user
-function getAccessToken(userId, callback) {
-  // Retrieve the access token from the database
-  db.get(
-    "SELECT accessToken FROM authorizations WHERE id = ?",
-    [userId],
-    (err, row) => {
-      if (err) {
-        console.error("Error retrieving user:", err);
-        return callback(err, null);
-      }
-      // Check if user exists and has an accessToken
-      if (row && row.accessToken) {
-        return callback(null, row.accessToken);
-      } else {
-        // No user or no access token available
-        return callback(
-          new Error("No access token found or user does not exist"),
-          null
-        );
-      }
-    }
-  );
-}
-
 function clearDatabase() {
   db.serialize(() => {
     // Clear data from authorizations table
@@ -243,15 +175,10 @@ function clearDatabase() {
   });
 }
 
-// Example usage
-clearDatabase();
-
 export default {
   db,
-  insertAuthorization,
   insertSiteAuthorization,
   insertUserAuthorization,
-  getAccessToken,
   getAccessTokenFromSiteId,
   getAccessTokenFromUserId,
   clearDatabase,

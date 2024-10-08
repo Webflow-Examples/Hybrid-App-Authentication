@@ -1,17 +1,6 @@
 import jwt from "jsonwebtoken";
 import db from "./database.js";
 
-const createSessionToken = (user) => {
-  const sessionToken = jwt.sign({ user }, process.env.WEBFLOW_CLIENT_SECRET, {
-    expiresIn: "24h",
-  }); // Example expiration time of 1 hour}
-  const decodedToken = jwt.decode(sessionToken);
-  return {
-    sessionToken,
-    exp: decodedToken.exp,
-  };
-};
-
 // Given a site ID, retrieve associated Access Token
 const retrieveAccessToken = (req, res, next) => {
   const idToken = req.body.idToken;
@@ -33,6 +22,17 @@ const retrieveAccessToken = (req, res, next) => {
 
     next(); // Proceed to next middleware or route handler
   });
+};
+
+const createSessionToken = (user) => {
+  const sessionToken = jwt.sign({ user }, process.env.WEBFLOW_CLIENT_SECRET, {
+    expiresIn: "24h",
+  }); // Example expiration time of 1 hour}
+  const decodedToken = jwt.decode(sessionToken);
+  return {
+    sessionToken,
+    exp: decodedToken.exp,
+  };
 };
 
 // Middleware to authenticate and validate JWT, and fetch the access token given the user ID

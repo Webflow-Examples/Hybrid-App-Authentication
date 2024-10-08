@@ -13,6 +13,10 @@
     "@webflow/designer-extension-typings": "*",
     "babel-loader": "^9.1.3",
     "concurrently": "*",
+    "crypto-browserify": "^3.12.0",
+    "dotenv-webpack": "^8.1.0",
+    "os-browserify": "^0.3.0",
+    "path-browserify": "^1.0.1",
     "webpack": "^5.89.0",
     "webpack-cli": "^5.1.4"
   },
