@@ -12,7 +12,7 @@
   "license": "ISC",
   "dependencies": {
     "@ngrok/ngrok": "^1.4.1",
-    "axios": "^1.6.8",
+    "axios": "^1.7.8",
     "chalk": "^5.3.0",
     "cli-table3": "^0.6.5",
     "concurrently": "^8.2.2",
